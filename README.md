@@ -15,3 +15,9 @@ Android's system clipboard passes data over Binder (~1 MB per transaction), so h
 
 ## Getting text in
 Paste button · Import any text file · Share text/files to MaxClip · "Save to MaxClip" in the text-selection menu.
+
+## MaxClip Keyboard (unlimited paste anywhere)
+Enable it from the banner in the app, then switch to it with the keyboard-switch button.
+- Tap a clip → its full text is typed into the current field in 16k-char chunks with flow control, bypassing the clipboard's ~1 MB Binder limit.
+- While it is the active keyboard, every copy in any app is auto-saved (password copies marked sensitive are skipped).
+- ⌨ switches back to your previous keyboard.

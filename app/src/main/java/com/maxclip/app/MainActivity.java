@@ -23,6 +23,9 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.provider.Settings;
+import android.view.inputmethod.InputMethodInfo;
+import android.view.inputmethod.InputMethodManager;
 
 import java.io.File;
 import java.io.InputStream;
@@ -46,6 +49,7 @@ public class MainActivity extends Activity {
     private final List<Entry> entries = new ArrayList<>();
     private Adapter adapter;
     private TextView emptyView;
+    private TextView banner;
     private File pendingExport;
 
     static final class Entry {
@@ -77,6 +81,14 @@ public class MainActivity extends Activity {
         emptyView.setPadding(pad * 2, pad * 2, pad * 2, pad * 2);
         emptyView.setAlpha(0.6f);
 
+        banner = new TextView(this);
+        banner.setPadding(pad + pad / 2, pad, pad + pad / 2, pad);
+        banner.setTextSize(14);
+        banner.setTextColor(0xFFFFFFFF);
+        banner.setBackgroundColor(0xFF059669);
+        banner.setOnClickListener(v -> onBannerTap());
+        root.addView(banner);
+
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.addView(emptyView, new LinearLayout.LayoutParams(-1, -1));
@@ -94,6 +106,53 @@ public class MainActivity extends Activity {
         setContentView(root);
         refresh();
         handleIncoming(getIntent());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateBanner();
+        refresh();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) updateBanner(); // picker dialog closed
+    }
+
+    private boolean keyboardEnabled() {
+        InputMethodManager imm = getSystemService(InputMethodManager.class);
+        for (InputMethodInfo i : imm.getEnabledInputMethodList()) {
+            if (i.getPackageName().equals(getPackageName())) return true;
+        }
+        return false;
+    }
+
+    private boolean keyboardActive() {
+        String cur = Settings.Secure.getString(getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+        return cur != null && cur.startsWith(getPackageName() + "/");
+    }
+
+    private void updateBanner() {
+        if (banner == null) return;
+        if (!keyboardEnabled()) {
+            banner.setText("Step 1: Tap to enable MaxClip Keyboard — paste clips of any size into any app and auto-save everything you copy.");
+            banner.setVisibility(View.VISIBLE);
+        } else if (!keyboardActive()) {
+            banner.setText("Step 2: Tap to switch to MaxClip Keyboard. It auto-saves copies only while it's your active keyboard.");
+            banner.setVisibility(View.VISIBLE);
+        } else {
+            banner.setVisibility(View.GONE);
+        }
+    }
+
+    private void onBannerTap() {
+        if (!keyboardEnabled()) {
+            startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS));
+        } else {
+            getSystemService(InputMethodManager.class).showInputMethodPicker();
+        }
     }
 
     @Override
